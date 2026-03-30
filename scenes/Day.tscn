@@ -1,0 +1,45 @@
+[gd_scene format=3 uid="uid://cy4gbafj1kpgd"]
+
+[ext_resource type="Script" uid="uid://bmybt1ql04p14" path="res://scenes/day.gd" id="1_xrevd"]
+
+[sub_resource type="GDScript" id="GDScript_xrevd"]
+script/source = "extends ScrollContainer
+#class_name cScroll
+@onready var h_scroll : HScrollBar = $_h_scroll
+@onready var v_scroll : VScrollBar = $_v_scroll
+
+func _process(_delta: float) -> void:
+	if !h_scroll && !v_scroll: return
+	if Input.is_action_pressed(\"w\"):
+		v_scroll.value = clamp(v_scroll.value - 10,v_scroll.min_value,v_scroll.max_value)
+	if Input.is_action_pressed(\"s\"):
+		v_scroll.value = clamp(v_scroll.value + 10,v_scroll.min_value,v_scroll.max_value)
+"
+
+[node name="Day" type="Control" unique_id=799473239]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+script = ExtResource("1_xrevd")
+metadata/_custom_type_script = "uid://bmybt1ql04p14"
+
+[node name="ScrollContainer" type="ScrollContainer" parent="." unique_id=2110117833]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+follow_focus = true
+horizontal_scroll_mode = 0
+script = SubResource("GDScript_xrevd")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="ScrollContainer" unique_id=232359819]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3

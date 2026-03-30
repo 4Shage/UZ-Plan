@@ -1,0 +1,116 @@
+[gd_scene format=3 uid="uid://cl3pjl6cowilf"]
+
+[ext_resource type="Theme" uid="uid://7dlyl5h4ytpa" path="res://custom_resources/theme.tres" id="1_br8ey"]
+[ext_resource type="Script" uid="uid://bd0171aik27jc" path="res://scenes/lesson.gd" id="1_wojol"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_br8ey"]
+
+[node name="Lesson" type="Control" unique_id=2103021109]
+custom_minimum_size = Vector2(0, 184)
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 3
+theme = ExtResource("1_br8ey")
+script = ExtResource("1_wojol")
+metadata/_custom_type_script = "uid://bd0171aik27jc"
+
+[node name="PanelContainer" type="PanelContainer" parent="." unique_id=226360159]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_br8ey")
+
+[node name="MarginContainer" type="MarginContainer" parent="PanelContainer" unique_id=839744976]
+layout_mode = 2
+theme_override_constants/margin_left = 3
+theme_override_constants/margin_top = 3
+theme_override_constants/margin_right = 3
+theme_override_constants/margin_bottom = 3
+
+[node name="VBoxContainer" type="VBoxContainer" parent="PanelContainer/MarginContainer" unique_id=160865686]
+layout_mode = 2
+
+[node name="HBoxContainer" type="HBoxContainer" parent="PanelContainer/MarginContainer/VBoxContainer" unique_id=1070448416]
+layout_mode = 2
+
+[node name="SUMMARY" type="Label" parent="PanelContainer/MarginContainer/VBoxContainer/HBoxContainer" unique_id=467534572]
+custom_minimum_size = Vector2(0, 34)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"Header"
+text = "<SUMMARY>"
+horizontal_alignment = 2
+vertical_alignment = 1
+autowrap_mode = 1
+
+[node name="CATEGORIES" type="Label" parent="PanelContainer/MarginContainer/VBoxContainer/HBoxContainer" unique_id=162382096]
+custom_minimum_size = Vector2(171, 34)
+layout_mode = 2
+theme_type_variation = &"Header"
+text = "<CATEGORIES>"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="HBoxContainer2" type="HBoxContainer" parent="PanelContainer/MarginContainer/VBoxContainer" unique_id=886888816]
+layout_mode = 2
+
+[node name="start" type="Label" parent="PanelContainer/MarginContainer/VBoxContainer/HBoxContainer2" unique_id=687958101]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "<start>"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="HSplitContainer" type="HSplitContainer" parent="PanelContainer/MarginContainer/VBoxContainer/HBoxContainer2" unique_id=882208159]
+layout_mode = 2
+split_offsets = PackedInt32Array(10)
+dragging_enabled = false
+split_offset = 10
+
+[node name="end" type="Label" parent="PanelContainer/MarginContainer/VBoxContainer/HBoxContainer2" unique_id=89376550]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "<end>"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="VSplitContainer" type="VSplitContainer" parent="PanelContainer/MarginContainer/VBoxContainer" unique_id=2079668882]
+layout_mode = 2
+split_offsets = PackedInt32Array(10)
+split_offset = 10
+
+[node name="HBoxContainer3" type="HBoxContainer" parent="PanelContainer/MarginContainer/VBoxContainer" unique_id=288576103]
+layout_mode = 2
+
+[node name="subgroup" type="Label" parent="PanelContainer/MarginContainer/VBoxContainer/HBoxContainer3" unique_id=1042769057]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"Header"
+text = "<subgroup>"
+vertical_alignment = 1
+
+[node name="HBoxContainer4" type="HBoxContainer" parent="PanelContainer/MarginContainer/VBoxContainer" unique_id=172235215]
+layout_mode = 2
+
+[node name="teacher" type="Label" parent="PanelContainer/MarginContainer/VBoxContainer/HBoxContainer4" unique_id=672951362]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"Header"
+text = "<teacher>"
+horizontal_alignment = 2
+vertical_alignment = 1
+
+[node name="LOCATION" type="Label" parent="PanelContainer/MarginContainer/VBoxContainer/HBoxContainer4" unique_id=1196821146]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"Header"
+text = "<LOCATION>"
+horizontal_alignment = 1
+vertical_alignment = 1

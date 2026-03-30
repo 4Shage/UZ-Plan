@@ -1,0 +1,148 @@
+[gd_scene format=3 uid="uid://pl03xrwno6r4"]
+
+[ext_resource type="Script" uid="uid://c4n6kte567ek2" path="res://scenes/main.gd" id="1_elqb8"]
+[ext_resource type="PackedScene" uid="uid://cyy44cn52x55i" path="res://scenes/Options.tscn" id="2_rvslj"]
+
+[sub_resource type="GDScript" id="GDScript_elqb8"]
+script/source = "extends Label
+
+func _init() -> void:
+	self.hide()
+	Master.state_changed.connect(_state_changed)
+func _state_changed(state_text:String) -> void:
+	var change:String = state_text
+	self.text = state_text
+	self.show()
+	await get_tree().create_timer(2).timeout
+	if self.text == change:
+		self.hide()
+"
+
+[sub_resource type="GDScript" id="GDScript_rvslj"]
+script/source = "extends TabContainer
+
+const DAY_SCENE: PackedScene = preload(\"res://scenes/Day.tscn\")
+
+var up:bool = false
+
+func _init() -> void:
+	Master.lessons_update.connect(func(): up = true)
+
+func _ready() -> void:
+	update()
+	if OS.get_name() == \"Android\":
+		get_tree().root.content_scale_factor = 2
+	else: get_tree().root.content_scale_factor = 1
+
+func _process(_delta: float) -> void:
+	if up:
+		update()
+
+var swipe_start := Vector2.ZERO
+var swipe_end := Vector2.ZERO
+var is_swiping := false
+const MIN_SWIPE_DISTANCE := 100.0
+
+func _input(event: InputEvent) -> void:
+	# Obsługa dotyku (np. na Androidzie)
+	if event is InputEventScreenTouch:
+		if event.pressed:
+			swipe_start = event.position
+			is_swiping = true
+		else:
+			if is_swiping:
+				swipe_end = event.position
+				_check_swipe()
+				is_swiping = false
+
+	# Obsługa myszy (np. na PC)
+	elif event is InputEventMouseButton:
+		if event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+			swipe_start = event.position
+			is_swiping = true
+		elif not event.pressed and event.button_index == MOUSE_BUTTON_LEFT and is_swiping:
+			swipe_end = event.position
+			_check_swipe()
+			is_swiping = false
+
+func _check_swipe() -> void:
+	var delta := swipe_end - swipe_start
+	if abs(delta.x) < MIN_SWIPE_DISTANCE or abs(delta.x) < abs(delta.y):
+		return  # zbyt mały lub bardziej pionowy ruch — nie liczymy
+
+	var direction := 0
+	if delta.x > 0:
+		direction = -1  # swipe w prawo → poprzednia zakładka
+	else:
+		direction = 1   # swipe w lewo → następna zakładka
+
+	swipe(direction)
+
+func update() -> void:
+	for e:Node in self.get_children(): e.queue_free()
+	up = false
+	if Master.list_of_lessons.is_empty(): return
+	var today_dict:Dictionary =Time.get_datetime_dict_from_system()
+	var today:String = str(today_dict.year)+\"-\"+str(today_dict.month)+\"-\"+str(today_dict.day)
+	var select_tab: int = 0
+	var found_today:bool = false
+	for day:String in Master.list_of_lessons:
+		if !found_today: select_tab += 1
+		var child:DayScene = DAY_SCENE.instantiate()
+		child.day = day
+		if day == today:
+			found_today = true
+		self.add_child(child)
+	
+	self.current_tab = 0 if !found_today else (select_tab-1)
+
+
+func swipe(direction:int) -> void:
+	if direction == 1: _on_forward()
+	elif  direction == -1: _on_back()
+
+func _on_forward() -> void:
+	self.current_tab = clamp(self.current_tab + 1,0,self.get_child_count() - 1)
+
+
+func _on_back() -> void:
+	self.current_tab = clamp(self.current_tab - 1,0,self.get_child_count() - 1)
+"
+
+[node name="Main" type="Control" unique_id=1679370851]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+script = ExtResource("1_elqb8")
+
+[node name="MarginContainer" type="MarginContainer" parent="." unique_id=1732889936]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 3
+theme_override_constants/margin_top = 3
+theme_override_constants/margin_right = 3
+theme_override_constants/margin_bottom = 3
+
+[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer" unique_id=1303229526]
+layout_mode = 2
+
+[node name="Status" type="Label" parent="MarginContainer/VBoxContainer" unique_id=1867080125]
+layout_mode = 2
+script = SubResource("GDScript_elqb8")
+
+[node name="TabContainer" type="TabContainer" parent="MarginContainer/VBoxContainer" unique_id=898793385]
+layout_mode = 2
+size_flags_vertical = 3
+script = SubResource("GDScript_rvslj")
+
+[node name="Options" parent="MarginContainer/VBoxContainer" unique_id=1750303352 instance=ExtResource("2_rvslj")]
+layout_mode = 2

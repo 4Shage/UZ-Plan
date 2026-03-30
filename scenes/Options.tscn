@@ -1,0 +1,188 @@
+[gd_scene format=3 uid="uid://cyy44cn52x55i"]
+
+[sub_resource type="GDScript" id="GDScript_nmn1p"]
+script/source = "extends FoldableContainer
+
+func _ready() -> void:
+	self.fold()
+
+func _on_folding_changed(_is_folded: bool) -> void:
+	size_flags_vertical = Control.SIZE_EXPAND_FILL if !_is_folded else Control.SIZE_SHRINK_BEGIN
+"
+
+[sub_resource type="GDScript" id="GDScript_ej4sg"]
+script/source = "extends OptionButton
+
+var up:bool = false
+
+func _init() -> void:
+	Master.courses_update.connect(func(): up = true)
+
+func _ready() -> void:
+	update()
+
+func _process(_delta: float) -> void:
+	if up:
+		update()
+
+func update() -> void:
+	self.clear()
+	self.add_item(\"EMPTY\")
+	for val in Master.list_of_courses:
+		self.add_item(Master.list_of_courses[val])
+	up = false
+	if Master.course_id != null and !Master.list_of_courses.is_empty():
+		var c_id = func(_id:int) -> int:
+			var result: int = 1
+			for c1 in Master.list_of_courses:
+				if c1 == str(_id):
+					break
+				result += 1
+			return result
+		self.select(c_id.call(Master.course_id))
+
+func _on_item_selected(index: int) -> void:
+	Master.course_id = Master.list_of_courses.keys()[index-1]
+	Master.get_course_groups()
+"
+
+[sub_resource type="GDScript" id="GDScript_j6yq7"]
+script/source = "extends OptionButton
+
+var up:bool = false
+
+func _init() -> void:
+	Master.groups_update.connect(func(): up = true)
+
+func _ready() -> void:
+	update()
+
+func _process(_delta: float) -> void:
+	if up:
+		update()
+
+func update() -> void:
+	self.clear()
+	self.add_item(\"EMPTY\")
+	for val in Master.list_of_groups:
+		self.add_item(Master.list_of_groups[val])
+	up = false
+	if Master.group_id != null and !Master.list_of_groups.is_empty():
+		var c_id = func(_id:int) -> int:
+			var result: int = 1
+			for c1 in Master.list_of_groups:
+				if c1 == str(_id):
+					break
+				result += 1
+			return result
+		self.select(c_id.call(Master.group_id))
+
+func _on_item_selected(index: int) -> void:
+	Master.group_id = Master.list_of_groups.keys()[index-1]
+	Master.get_lessons()
+"
+
+[sub_resource type="GDScript" id="GDScript_ckjey"]
+script/source = "extends OptionButton
+
+var up:bool = false
+
+func _init() -> void:
+	Master.subgroups_update.connect(func(): up = true)
+
+func _ready() -> void:
+	update()
+
+func _process(_delta: float) -> void:
+	if up:
+		update()
+
+func update() -> void:
+	if Master.subgroup_id != null:
+		match Master.subgroup_id:
+			\"A\": self.select(0)
+			\"B\": self.select(1)
+
+func _on_item_selected(index: int) -> void:
+	match index:
+		0: Master.subgroup_id = \"A\"
+		1: Master.subgroup_id = \"B\"
+	Master.subgroups_update.emit()
+"
+
+[node name="Options" type="FoldableContainer" unique_id=943556723]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+title = "Options"
+script = SubResource("GDScript_nmn1p")
+
+[node name="MarginContainer" type="MarginContainer" parent="." unique_id=1293767247]
+layout_mode = 2
+theme_override_constants/margin_left = 5
+theme_override_constants/margin_top = 5
+theme_override_constants/margin_right = 5
+theme_override_constants/margin_bottom = 5
+
+[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer" unique_id=1997894950]
+layout_mode = 2
+
+[node name="HBoxContainer" type="HBoxContainer" parent="MarginContainer/VBoxContainer" unique_id=185304991]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="MarginContainer/VBoxContainer/HBoxContainer" unique_id=988693849]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Course"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="OptionButton" type="OptionButton" parent="MarginContainer/VBoxContainer/HBoxContainer" unique_id=1483833414]
+layout_mode = 2
+size_flags_horizontal = 3
+script = SubResource("GDScript_ej4sg")
+
+[node name="HBoxContainer2" type="HBoxContainer" parent="MarginContainer/VBoxContainer" unique_id=1091477880]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="MarginContainer/VBoxContainer/HBoxContainer2" unique_id=1298443257]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Group"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="OptionButton" type="OptionButton" parent="MarginContainer/VBoxContainer/HBoxContainer2" unique_id=1911865796]
+layout_mode = 2
+size_flags_horizontal = 3
+text_overrun_behavior = 2
+script = SubResource("GDScript_j6yq7")
+
+[node name="HBoxContainer3" type="HBoxContainer" parent="MarginContainer/VBoxContainer" unique_id=75828627]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="MarginContainer/VBoxContainer/HBoxContainer3" unique_id=2139302067]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Subgroup"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="OptionButton" type="OptionButton" parent="MarginContainer/VBoxContainer/HBoxContainer3" unique_id=1199028436]
+layout_mode = 2
+size_flags_horizontal = 3
+item_count = 2
+popup/item_0/text = "A"
+popup/item_0/id = 0
+popup/item_1/text = "B"
+popup/item_1/id = 1
+script = SubResource("GDScript_ckjey")
+
+[connection signal="folding_changed" from="." to="." method="_on_folding_changed"]
+[connection signal="item_selected" from="MarginContainer/VBoxContainer/HBoxContainer/OptionButton" to="MarginContainer/VBoxContainer/HBoxContainer/OptionButton" method="_on_item_selected"]
+[connection signal="item_selected" from="MarginContainer/VBoxContainer/HBoxContainer2/OptionButton" to="MarginContainer/VBoxContainer/HBoxContainer2/OptionButton" method="_on_item_selected"]
+[connection signal="item_selected" from="MarginContainer/VBoxContainer/HBoxContainer3/OptionButton" to="MarginContainer/VBoxContainer/HBoxContainer3/OptionButton" method="_on_item_selected"]
