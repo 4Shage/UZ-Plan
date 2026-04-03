@@ -29,6 +29,7 @@ var list_of_lessons:Dictionary:
 		Settings.static_set("plan","lessons",value)
 		list_of_lessons = value
 		lessons_update.emit()
+var list_of_lessonsv2:Array[Day]
 var course_id: int:
 	set(value):
 		get_course_groups()
@@ -223,6 +224,9 @@ func get_lessons() -> void:
 
 		else:
 			current_event[key] = value
-
+	list_of_lessonsv2.clear()
+	for e in list_of_lessons.keys():
+		var o: Day = Day.new(e,list_of_lessons[e])
+		list_of_lessonsv2.append(o)
 	state = "Acquired lessons.."
 	lessons_update.emit()

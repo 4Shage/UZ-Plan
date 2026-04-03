@@ -80,10 +80,6 @@ pointing/android/enable_long_press_as_right_click=true
 2d/navigation_engine="Dummy"
 3d/navigation_engine="Dummy"
 
-[network]
-
-tls/certificate_bundle_override="res://cert/harica_chain.pem"
-
 [physics]
 
 2d/physics_engine="Dummy"
