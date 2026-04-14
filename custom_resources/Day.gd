@@ -16,9 +16,13 @@ func _init(idate:String, ilessons:Dictionary) -> void:
 		var object: Lesson = Lesson.new(ilessons[lesson])
 		lessons[lesson] = object
 
+func getStringDate() -> String:
+	return _getStringDate(date)
+static func _getStringDate(d:Dictionary) -> String:
+	return str(d["year"]) + "." + str(d["month"]) + "." + str(d["day"])
 
 func serialize() -> Dictionary:
-	var idate:String = date["year"] + "." + date["month"] + "." + date["day"]
+	var idate:String = getStringDate()
 	var ilessons:Dictionary[String,Dictionary]
 	for lesson in lessons:
 		var dict = lessons[lesson].serialize

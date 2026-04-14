@@ -4,12 +4,13 @@ class_name DayScene extends Control
 const LESSON_SCENE: PackedScene = preload("res://scenes/Lesson.tscn")
 
 @export var day:String
+@export var id:int
 
 
 func _ready() -> void:
 	self.name = day
-	for lesson in Master.list_of_lessons[day]:
+	for lesson:String in Master.list_of_lessonsv2[id].lessons:
 		var child:LessonScene = LESSON_SCENE.instantiate()
-		child.day = day
-		child.uid = lesson
+		child.dayID = id
+		child.lesson = Master.list_of_lessonsv2[id].lessons[lesson]
 		v_box_container.add_child(child)

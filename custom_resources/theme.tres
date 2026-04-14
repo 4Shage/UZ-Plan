@@ -1442,12 +1442,56 @@ content_margin_left = 0.0
 content_margin_top = 0.0
 content_margin_right = 0.0
 content_margin_bottom = 0.0
-bg_color = Color(0.1, 0.1, 0.1, 0.6)
+bg_color = Color(0.58431375, 0.58431375, 0.58431375, 1)
 corner_radius_top_left = 3
 corner_radius_top_right = 3
 corner_radius_bottom_right = 3
 corner_radius_bottom_left = 3
 corner_detail = 5
+shadow_color = Color(0, 0, 0, 0.2)
+shadow_size = 3
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_7cm8d"]
+bg_color = Color(0.2, 0.8, 0.3, 1)
+shadow_color = Color(0, 0, 0.2, 0.6)
+shadow_size = 3
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_orryc"]
+bg_color = Color(1, 0.35, 0.35, 1)
+shadow_color = Color(0, 0, 0.2, 0.6)
+shadow_size = 3
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_64tll"]
+bg_color = Color(0.55, 0.55, 0.55, 1)
+shadow_color = Color(0, 0, 0.2, 0.6)
+shadow_size = 3
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_n7tf5"]
+bg_color = Color(1, 0.6, 0.2, 1)
+shadow_color = Color(0, 0, 0.2, 0.6)
+shadow_size = 3
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_oo266"]
+bg_color = Color(0.25, 0.8, 0.35, 1)
+shadow_color = Color(0, 0, 0.2, 0.6)
+shadow_size = 3
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_nl33e"]
+bg_color = Color(0.4, 0.75, 0.9, 1)
+shadow_color = Color(0, 0, 0.2, 0.6)
+shadow_size = 3
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_gsn7o"]
+bg_color = Color(0.8, 0.45, 0.85, 1)
+shadow_color = Color(0, 0, 0.2, 0.6)
+shadow_size = 3
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_17gls"]
+bg_color = Color(0.2, 0.5, 1, 1)
+shadow_color = Color(0, 0, 0.2, 0.6)
+shadow_size = 3
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_4nhk4"]
 
 [sub_resource type="DPITexture" id="DPITexture_4glsf"]
 _source = "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"48\" height=\"8\"><path fill=\"none\" stroke=\"gray\" stroke-opacity=\".65\" stroke-width=\"1.7\" d=\"M4 4h40\"/></svg>
@@ -1485,6 +1529,24 @@ Label/fonts/font = SubResource("FontFile_gsn7o")
 Label/styles/focus = SubResource("StyleBoxFlat_8upl0")
 Label/styles/normal = SubResource("StyleBoxEmpty_4nhk4")
 PanelContainer/styles/panel = SubResource("StyleBoxFlat_0p7r7")
+PanelContainerC/base_type = &"PanelContainer"
+PanelContainerC/styles/panel = SubResource("StyleBoxFlat_7cm8d")
+PanelContainerE/base_type = &"PanelContainer"
+PanelContainerE/styles/panel = SubResource("StyleBoxFlat_orryc")
+PanelContainerK/base_type = &"PanelContainer"
+PanelContainerK/styles/panel = SubResource("StyleBoxFlat_64tll")
+PanelContainerL/base_type = &"PanelContainer"
+PanelContainerL/styles/panel = SubResource("StyleBoxFlat_n7tf5")
+PanelContainerP/base_type = &"PanelContainer"
+PanelContainerP/styles/panel = SubResource("StyleBoxFlat_oo266")
+PanelContainerR/base_type = &"PanelContainer"
+PanelContainerR/styles/panel = SubResource("StyleBoxFlat_nl33e")
+PanelContainerS/base_type = &"PanelContainer"
+PanelContainerS/styles/panel = SubResource("StyleBoxFlat_gsn7o")
+PanelContainerW/base_type = &"PanelContainer"
+PanelContainerW/styles/panel = SubResource("StyleBoxFlat_17gls")
+PanelContainerZ/base_type = &"PanelContainer"
+PanelContainerZ/styles/panel = SubResource("StyleBoxFlat_4nhk4")
 VSplitContainer/constants/autohide = 1
 VSplitContainer/constants/minimum_grab_thickness = 6
 VSplitContainer/constants/separation = 12

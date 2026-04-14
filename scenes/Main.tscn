@@ -81,18 +81,20 @@ func _check_swipe() -> void:
 func update() -> void:
 	for e:Node in self.get_children(): e.queue_free()
 	up = false
-	if Master.list_of_lessons.is_empty(): return
-	var today_dict:Dictionary =Time.get_datetime_dict_from_system()
-	var today:String = str(today_dict.year)+\"-\"+str(today_dict.month)+\"-\"+str(today_dict.day)
+	if Master.list_of_lessonsv2.is_empty(): return
+	var today_dict:Dictionary = Time.get_datetime_dict_from_system()
+	var today:String = Day._getStringDate(today_dict)
 	var select_tab: int = 0
 	var found_today:bool = false
-	for day:String in Master.list_of_lessons:
+	for day: Day in Master.list_of_lessonsv2:
 		if !found_today: select_tab += 1
 		var child:DayScene = DAY_SCENE.instantiate()
-		child.day = day
-		if day == today:
+		child.day = day.getStringDate()
+		child.id = Master.list_of_lessonsv2.find(day)
+		if day.getStringDate() == today:
 			found_today = true
 		self.add_child(child)
+		self.set_tab_title(self.get_tab_count()-1, day.getStringDate())
 	
 	self.current_tab = 0 if !found_today else (select_tab-1)
 
