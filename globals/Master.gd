@@ -24,12 +24,15 @@ var list_of_groups:Dictionary:
 		list_of_groups = value
 		Settings.static_set("plan","groups",list_of_groups)
 		groups_update.emit()
-var list_of_lessons:Dictionary:
+var data:Dictionary:
 	set(value):
 		Settings.static_set("plan","lessons",value)
-		list_of_lessons = value
+		data = value
 		lessons_update.emit()
-var list_of_lessonsv2:Array[Day]
+var list_of_lessons:Array[Day]:
+	set(value):
+		Cache.static_course_save(course_id,group_id,value)
+		list_of_lessons = value
 var course_id: int:
 	set(value):
 		get_course_groups()
@@ -125,7 +128,7 @@ func get_lessons() -> void:
 	if group_id == null:
 		return
 	state = "Getting lessons..."
-	list_of_lessons.clear()
+	data.clear()
 	var url = "https://plan.uz.zgora.pl/grupy_ics.php?ID={0}&KIND=GG".format([group_id])
 	var group_file := FileAccess.open(await download(url, "ics", "plan"), FileAccess.READ)
 	if not group_file:
@@ -179,11 +182,11 @@ func get_lessons() -> void:
 				current_event["date"] = date_formatted
 
 				# Dodaj do listy
-				if not list_of_lessons.has(date_formatted):
-					list_of_lessons[date_formatted] = {}
+				if not data.has(date_formatted):
+					data[date_formatted] = {}
 
 				var uid = current_event.get("UID", "UNKNOWN")
-				list_of_lessons[date_formatted][uid] = current_event.duplicate()
+				data[date_formatted][uid] = current_event.duplicate()
 			continue
 
 		if not in_event or line == "":
@@ -224,9 +227,10 @@ func get_lessons() -> void:
 
 		else:
 			current_event[key] = value
-	list_of_lessonsv2.clear()
-	for e in list_of_lessons.keys():
-		var o: Day = Day.new(e,list_of_lessons[e])
-		list_of_lessonsv2.append(o)
+	list_of_lessons.clear()
+	for e in data.keys():
+		var o: Day = Day.new(e,data[e])
+		list_of_lessons.append(o)
+	Cache.static_course_save(course_id,group_id,list_of_lessons)
 	state = "Acquired lessons.."
 	lessons_update.emit()

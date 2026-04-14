@@ -19,12 +19,13 @@ func _init(idate:String, ilessons:Dictionary) -> void:
 func getStringDate() -> String:
 	return _getStringDate(date)
 static func _getStringDate(d:Dictionary) -> String:
+	if d.is_empty(): return ""
 	return str(d["year"]) + "." + str(d["month"]) + "." + str(d["day"])
 
 func serialize() -> Dictionary:
 	var idate:String = getStringDate()
 	var ilessons:Dictionary[String,Dictionary]
 	for lesson in lessons:
-		var dict = lessons[lesson].serialize
+		var dict = lessons[lesson].serialize()
 		ilessons.merge(dict)
 	return {idate:ilessons}

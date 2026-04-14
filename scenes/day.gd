@@ -9,8 +9,8 @@ const LESSON_SCENE: PackedScene = preload("res://scenes/Lesson.tscn")
 
 func _ready() -> void:
 	self.name = day
-	for lesson:String in Master.list_of_lessonsv2[id].lessons:
+	for lesson:String in Master.list_of_lessons[id].lessons:
 		var child:LessonScene = LESSON_SCENE.instantiate()
 		child.dayID = id
-		child.lesson = Master.list_of_lessonsv2[id].lessons[lesson]
+		child.lesson = Master.list_of_lessons[id].lessons[lesson]
 		v_box_container.add_child(child)
