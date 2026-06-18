@@ -20,7 +20,7 @@ func getStringDate() -> String:
 	return _getStringDate(date)
 static func _getStringDate(d:Dictionary) -> String:
 	if d.is_empty(): return ""
-	return str(d["year"]) + "." + str(d["month"]) + "." + str(d["day"])
+	return "%04d-%02d-%02d" % [d["year"], d["month"], d["day"]]
 
 func serialize() -> Dictionary:
 	var idate:String = getStringDate()

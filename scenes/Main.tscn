@@ -2,6 +2,7 @@
 
 [ext_resource type="Script" uid="uid://c4n6kte567ek2" path="res://scenes/main.gd" id="1_elqb8"]
 [ext_resource type="PackedScene" uid="uid://cyy44cn52x55i" path="res://scenes/Options.tscn" id="2_rvslj"]
+[ext_resource type="PackedScene" uid="uid://id34ssqkpmf0" path="res://scenes/Selector.tscn" id="3_0bbpv"]
 
 [sub_resource type="GDScript" id="GDScript_elqb8"]
 script/source = "extends Label
@@ -67,6 +68,10 @@ func _input(event: InputEvent) -> void:
 
 func _check_swipe() -> void:
 	var delta := swipe_end - swipe_start
+	if abs(delta.y) >= MIN_SWIPE_DISTANCE and abs(delta.y) > abs(delta.x):
+		if delta.y > 0:
+			_on_down_swipe()
+		return
 	if abs(delta.x) < MIN_SWIPE_DISTANCE or abs(delta.x) < abs(delta.y):
 		return  # zbyt mały lub bardziej pionowy ruch — nie liczymy
 
@@ -77,6 +82,16 @@ func _check_swipe() -> void:
 		direction = 1   # swipe w lewo → następna zakładka
 
 	swipe(direction)
+
+func _on_down_swipe() -> void:
+	var options := get_node_or_null(\"../Options\")
+	if options == null:
+		Master.get_lessons()
+		return
+	if options.call(\"is_options_folded\"):
+		Master.get_lessons()
+	else:
+		options.call(\"fold_options\")
 
 func update() -> void:
 	for e:Node in self.get_children(): e.queue_free()
@@ -148,3 +163,7 @@ script = SubResource("GDScript_rvslj")
 
 [node name="Options" parent="MarginContainer/VBoxContainer" unique_id=1750303352 instance=ExtResource("2_rvslj")]
 layout_mode = 2
+
+[node name="Selector" parent="." unique_id=1303323550 instance=ExtResource("3_0bbpv")]
+visible = false
+layout_mode = 1

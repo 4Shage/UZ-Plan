@@ -3,13 +3,13 @@ class_name Cache extends ConfigFile
 const DEFAULT_PATH: String = "user://cache.cfg"
 
 func course_save(courseID: int, groupID:int, list_of_lessons:Array[Day]):
-	var data: Dictionary
+	var data: Dictionary = {}
 	for lesson in list_of_lessons:
 		data.merge(lesson.serialize(),false)
 	_set_value(str(courseID),str(groupID),data)
 
 func course_load(courseID: int, groupID:int, ) -> Array[Day]:
-	var data: Dictionary = get_value(str(courseID),str(groupID),[])
+	var data: Dictionary = get_value(str(courseID),str(groupID),{})
 	var list_of_lessons:Array[Day] = []
 	for id in data.keys():
 		var day: Day = Day.new(id,data[id])

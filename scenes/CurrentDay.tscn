@@ -1,0 +1,72 @@
+[gd_scene format=3 uid="uid://b65x0sgqf1wfa"]
+
+[sub_resource type="GDScript" id="GDScript_ywben"]
+script/source = "extends Control
+@export var day: String
+@onready var label: Label = $PanelContainer/CenterContainer/Label
+
+# Called when the node enters the scene tree for the first time.
+func _ready() -> void:
+	var time = Time.get_datetime_dict_from_datetime_string(day,true)
+	var weekday = func() -> String:
+		match time.weekday:
+			0:
+				return \"Sunday\"
+			1: 
+				return \"Monday\"
+			2:
+				return \"Tuesday\"
+			3:
+				return \"Wednesday\"
+			4:
+				return \"Thursday\"
+			5:
+				return \"Friday\"
+			6:
+				return \"Saturday\"
+			_:
+				return \"Err\"
+	label.text = weekday.call()
+
+
+# Called every frame. 'delta' is the elapsed time since the previous frame.
+func _process(delta: float) -> void:
+	pass
+"
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_ywben"]
+bg_color = Color(0.21742532, 0.41662616, 0.21767995, 0.24313726)
+border_width_left = 5
+border_width_top = 5
+border_width_right = 5
+border_width_bottom = 5
+border_blend = true
+
+[sub_resource type="LabelSettings" id="LabelSettings_ywben"]
+font_size = 36
+
+[node name="CurrentDay" type="Control" unique_id=53845790]
+custom_minimum_size = Vector2(0, 75)
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = SubResource("GDScript_ywben")
+
+[node name="PanelContainer" type="PanelContainer" parent="." unique_id=799815665]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_ywben")
+
+[node name="CenterContainer" type="CenterContainer" parent="PanelContainer" unique_id=738469256]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="PanelContainer/CenterContainer" unique_id=567048753]
+layout_mode = 2
+label_settings = SubResource("LabelSettings_ywben")

@@ -17,16 +17,18 @@ func _init() -> void:
 func subgroup_hide() -> void:
 	if lesson == null:
 		self.queue_free()
+		return
 	if lesson.subgroup != Master.subgroup_id and lesson.subgroup != "O":
 		self.hide()
 	else: self.show()
 
 func _ready() -> void:
-	self.name = lesson.uid
-	subgroup_hide()
-
 	if lesson == null:
 		self.queue_free()
+		return
+
+	self.name = lesson.uid
+	subgroup_hide()
 	
 	# Wypełnianie pól
 	summary.text = lesson.summary.split(":")[0]

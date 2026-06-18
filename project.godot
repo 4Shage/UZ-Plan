@@ -43,6 +43,10 @@ folder_colors={
 "res://scenes/": "green"
 }
 
+[global_group]
+
+Selectors=""
+
 [input]
 
 s={

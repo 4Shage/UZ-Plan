@@ -3,10 +3,20 @@
 [sub_resource type="GDScript" id="GDScript_nmn1p"]
 script/source = "extends FoldableContainer
 
+var options_folded: bool = true
+
 func _ready() -> void:
+	fold_options()
+
+func fold_options() -> void:
+	options_folded = true
 	self.fold()
 
+func is_options_folded() -> bool:
+	return options_folded
+
 func _on_folding_changed(_is_folded: bool) -> void:
+	options_folded = _is_folded
 	size_flags_vertical = Control.SIZE_EXPAND_FILL if !_is_folded else Control.SIZE_SHRINK_BEGIN
 "
 
@@ -42,8 +52,29 @@ func update() -> void:
 		self.select(c_id.call(Master.course_id))
 
 func _on_item_selected(index: int) -> void:
+	if index <= 0:
+		return
 	Master.course_id = Master.list_of_courses.keys()[index-1]
-	Master.get_course_groups()
+"
+
+[sub_resource type="GDScript" id="GDScript_pxqj8"]
+script/source = "extends Selector
+
+
+
+func _on_result(res: String) -> void:
+	Master.course_id = Master.list_of_courses.values().find(res)
+	
+	
+	if Master.course_id != null and !Master.list_of_courses.is_empty():
+		var c_id = func(_id:int) -> int:
+			var result: int = 1
+			for c1 in Master.list_of_courses:
+				if c1 == str(_id):
+					break
+				result += 1
+			return result
+		self.text = c_id.call(Master.course_id)
 "
 
 [sub_resource type="GDScript" id="GDScript_j6yq7"]
@@ -78,8 +109,9 @@ func update() -> void:
 		self.select(c_id.call(Master.group_id))
 
 func _on_item_selected(index: int) -> void:
+	if index <= 0:
+		return
 	Master.group_id = Master.list_of_groups.keys()[index-1]
-	Master.get_lessons()
 "
 
 [sub_resource type="GDScript" id="GDScript_ckjey"]
@@ -142,9 +174,18 @@ horizontal_alignment = 1
 vertical_alignment = 1
 
 [node name="OptionButton" type="OptionButton" parent="MarginContainer/VBoxContainer/HBoxContainer" unique_id=1483833414]
+visible = false
 layout_mode = 2
 size_flags_horizontal = 3
 script = SubResource("GDScript_ej4sg")
+
+[node name="Selector" type="Button" parent="MarginContainer/VBoxContainer/HBoxContainer" unique_id=1298912266]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "EMPTY"
+script = SubResource("GDScript_pxqj8")
+ID = "Course"
+metadata/_custom_type_script = "uid://bt6i2mib44yy6"
 
 [node name="HBoxContainer2" type="HBoxContainer" parent="MarginContainer/VBoxContainer" unique_id=1091477880]
 layout_mode = 2
@@ -184,5 +225,6 @@ script = SubResource("GDScript_ckjey")
 
 [connection signal="folding_changed" from="." to="." method="_on_folding_changed"]
 [connection signal="item_selected" from="MarginContainer/VBoxContainer/HBoxContainer/OptionButton" to="MarginContainer/VBoxContainer/HBoxContainer/OptionButton" method="_on_item_selected"]
+[connection signal="result" from="MarginContainer/VBoxContainer/HBoxContainer/Selector" to="MarginContainer/VBoxContainer/HBoxContainer/Selector" method="_on_result"]
 [connection signal="item_selected" from="MarginContainer/VBoxContainer/HBoxContainer2/OptionButton" to="MarginContainer/VBoxContainer/HBoxContainer2/OptionButton" method="_on_item_selected"]
 [connection signal="item_selected" from="MarginContainer/VBoxContainer/HBoxContainer3/OptionButton" to="MarginContainer/VBoxContainer/HBoxContainer3/OptionButton" method="_on_item_selected"]
