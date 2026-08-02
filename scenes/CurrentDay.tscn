@@ -5,7 +5,6 @@ script/source = "extends Control
 @export var day: String
 @onready var label: Label = $PanelContainer/CenterContainer/Label
 
-# Called when the node enters the scene tree for the first time.
 func _ready() -> void:
 	var time = Time.get_datetime_dict_from_datetime_string(day,true)
 	var weekday = func() -> String:
@@ -27,11 +26,6 @@ func _ready() -> void:
 			_:
 				return \"Err\"
 	label.text = weekday.call()
-
-
-# Called every frame. 'delta' is the elapsed time since the previous frame.
-func _process(delta: float) -> void:
-	pass
 "
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_ywben"]

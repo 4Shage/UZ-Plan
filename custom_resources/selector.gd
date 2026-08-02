@@ -2,7 +2,7 @@ extends Button
 class_name Selector
 
 @export var ID: String
-var data: Array[String]
+var data: Dictionary[String, String]
 signal result(res:String)
 
 # Called when the node enters the scene tree for the first time.

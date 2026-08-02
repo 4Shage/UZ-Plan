@@ -61,20 +61,24 @@ func _on_item_selected(index: int) -> void:
 script/source = "extends Selector
 
 
-
 func _on_result(res: String) -> void:
 	Master.course_id = Master.list_of_courses.values().find(res)
 	
 	
 	if Master.course_id != null and !Master.list_of_courses.is_empty():
 		var c_id = func(_id:int) -> int:
-			var result: int = 1
+			var rest: int = 1
 			for c1 in Master.list_of_courses:
 				if c1 == str(_id):
 					break
-				result += 1
-			return result
-		self.text = c_id.call(Master.course_id)
+				rest += 1
+			return rest
+		self.text = str(c_id.call(Master.course_id))
+
+
+func _on_pressed() -> void:
+	if Master.course_id != null and !Master.list_of_courses.is_empty():
+		self.data.merge(Master.list_of_courses, true)
 "
 
 [sub_resource type="GDScript" id="GDScript_j6yq7"]
@@ -225,6 +229,7 @@ script = SubResource("GDScript_ckjey")
 
 [connection signal="folding_changed" from="." to="." method="_on_folding_changed"]
 [connection signal="item_selected" from="MarginContainer/VBoxContainer/HBoxContainer/OptionButton" to="MarginContainer/VBoxContainer/HBoxContainer/OptionButton" method="_on_item_selected"]
+[connection signal="pressed" from="MarginContainer/VBoxContainer/HBoxContainer/Selector" to="MarginContainer/VBoxContainer/HBoxContainer/Selector" method="_on_pressed"]
 [connection signal="result" from="MarginContainer/VBoxContainer/HBoxContainer/Selector" to="MarginContainer/VBoxContainer/HBoxContainer/Selector" method="_on_result"]
 [connection signal="item_selected" from="MarginContainer/VBoxContainer/HBoxContainer2/OptionButton" to="MarginContainer/VBoxContainer/HBoxContainer2/OptionButton" method="_on_item_selected"]
 [connection signal="item_selected" from="MarginContainer/VBoxContainer/HBoxContainer3/OptionButton" to="MarginContainer/VBoxContainer/HBoxContainer3/OptionButton" method="_on_item_selected"]
