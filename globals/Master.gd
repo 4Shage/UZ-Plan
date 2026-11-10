@@ -1,236 +1,211 @@
 extends Node
-signal internet
-signal state_changed(text:String)
+
+signal state_changed(text: String)
+signal busy_changed(busy: bool)
 signal courses_update
 signal groups_update
-signal subgroups_update
 signal lessons_update
+signal subgroups_update
 
-const LIST_OF_COURSES:String = "https://plan.uz.zgora.pl/grupy_lista_kierunkow.php"
+const BASE_URL := "https://plan.uz.zgora.pl/"
 
+var list_of_courses := {}
+var list_of_groups := {}
+var lessons: Array[Lesson] = []
+var course_id := ""
+var group_id := ""
+var subgroups := PackedStringArray()
 
-var state:String:
-	set(value):
-		state = value
-		print(state)
-		state_changed.emit(state)
-var list_of_courses:Dictionary:
-	set(value):
-		list_of_courses = value
-		Settings.static_set("plan","courses",list_of_courses)
-		courses_update.emit()
-var list_of_groups:Dictionary:
-	set(value):
-		list_of_groups = value
-		Settings.static_set("plan","groups",list_of_groups)
-		groups_update.emit()
-var data:Dictionary:
-	set(value):
-		Settings.static_set("plan","lessons",value)
-		data = value
-		lessons_update.emit()
-var list_of_lessons:Array[Day]:
-	set(value):
-		Cache.static_course_save(course_id,group_id,value)
-		list_of_lessons = value
-var course_id: int:
-	set(value):
-		get_course_groups()
-		course_id = value
-		Settings.static_set("plan","course_id",course_id)
-var group_id:int:
-	set(value):
-		get_lessons()
-		group_id = value
-		Settings.static_set("plan","group_id",group_id)
-var subgroup_id:String:
-	set(value):
-		subgroup_id = value
-		Settings.static_set("plan","subgroup_id",subgroup_id)
+var _settings := Settings.new()
+var _cache := Cache.new()
+var _pending := 0
+var _refreshing := false
 
-func prepare_http() -> HTTPRequest:
-	var http := HTTPRequest.new()
-	http.use_threads = true
-	http.timeout = 10
-	http.set_tls_options(TLSOptions.client_unsafe())
-	return http
-
-func check_net() -> void:
-	var http := prepare_http()
-	http.request_completed.connect(func(..._args): 
-		internet.emit()
-		http.queue_free()
-		)
-	self.add_child(http)
-	http.request("https://www.google.com")
-
-func download(link:String,ext:String,override_name:String = "") -> String:
-	var http := prepare_http()
-	var file_name:String = "user://"+((link.get_slice("/",link.get_slice_count("/")-1) + "." + ext) if override_name.is_empty() else (override_name + "." + ext))
-	http.download_file = file_name
-	self.add_child(http)
-	http.request(link,[],HTTPClient.METHOD_GET,"")
-	var a:Array = await http.request_completed
-	#while a[1] != 200:
-		#http.request(link,[],HTTPClient.METHOD_GET,"")
-		#a = await http.request_completed
-		#print(a[1])
-	print(a[1])
-	http.queue_free()
-	if !FileAccess.file_exists(file_name):
-		print("Using defaults")
-		var default_file:String = file_name.replace("user://","res://default_assets/")
-		if !FileAccess.file_exists(default_file):
-			return default_file
-	else:
-		print(file_name+" was downloaded!")
-	return file_name
 
 func start() -> void:
-	check_net()
-	await internet
-	state = "Checking plan..."
-	var file := FileAccess.open(await download(LIST_OF_COURSES,"html"), FileAccess.READ)
-	var regex = RegEx.new()
-	
-	regex.compile(r'grupy_lista_grup_kierunku\.php\?ID=(\d+)')
-	var courses_ids:Array = regex.search_all(file.get_as_text())
-	regex.compile(r'grupy_lista_grup_kierunku\.php\?ID=\d+">([^<]+)</a>')
-	var courses_names:Array = regex.search_all(file.get_as_text())
-	file.close()
-	for id:RegExMatch in courses_ids:
-		list_of_courses[id.strings[1]] = courses_names[courses_ids.find(id)].strings[1]
+	_restore()
+	await refresh()
+
+
+func refresh() -> void:
+	if _refreshing:
+		return
+	_refreshing = true
+	await _load_courses()
+	if not course_id.is_empty():
+		await _load_groups(course_id)
+	if not group_id.is_empty():
+		await _load_lessons(group_id)
+	_refreshing = false
+
+
+func select_course(id: String) -> void:
+	course_id = id
+	group_id = ""
+	subgroups = PackedStringArray()
+	lessons.clear()
+	list_of_groups = _cache.take("groups", id, {})
+	_save_selection()
+	groups_update.emit()
+	lessons_update.emit()
+	await _load_groups(id)
+
+
+func select_group(id: String) -> void:
+	group_id = id
+	subgroups = PackedStringArray()
+	lessons = _cache.take_lessons(id)
+	_save_selection()
+	lessons_update.emit()
+	await _load_lessons(id)
+
+
+func toggle_subgroup(label: String) -> void:
+	var index := subgroups.find(label)
+	if index >= 0:
+		subgroups.remove_at(index)
+	else:
+		subgroups.append(label)
+	_selection_changed()
+
+
+func clear_subgroups() -> void:
+	subgroups = PackedStringArray()
+	_selection_changed()
+
+
+func course_name() -> String:
+	return list_of_courses.get(course_id, "")
+
+
+func group_name() -> String:
+	return list_of_groups.get(group_id, "")
+
+
+func available_subgroups() -> Array:
+	var found := {}
+	for lesson in lessons:
+		for label in lesson.subgroups:
+			found[label] = true
+	var result: Array = found.keys()
+	result.sort_custom(func(a: String, b: String) -> bool: return a.naturalnocasecmp_to(b) < 0)
+	return result
+
+
+func days() -> Array[Day]:
+	var result: Array[Day] = []
+	var current: Day = null
+	for lesson in lessons:
+		if not lesson.matches(subgroups):
+			continue
+		if current == null or current.date != lesson.date:
+			current = Day.new(lesson.date)
+			result.append(current)
+		current.lessons.append(lesson)
+	return result
+
+
+func say(text: String) -> void:
+	state_changed.emit(text)
+
+
+func _selection_changed() -> void:
+	_save_selection()
+	subgroups_update.emit()
+
+
+func _load_courses() -> void:
+	var fresh := _links(await _download("grupy_lista_kierunkow.php"), "grupy_lista_grup_kierunku")
+	if fresh.is_empty():
+		say("Offline - showing saved data")
+		return
+	list_of_courses = fresh
+	_cache.put("courses", "all", fresh)
 	courses_update.emit()
-	state = "Acquired courses.."
-	if Settings.static_get("plan","course_id") != null:
-		course_id = Settings.static_get("plan","course_id")
-		get_course_groups()
-	if Settings.static_get("plan","group_id") != null:
-		group_id = Settings.static_get("plan","group_id")
-		get_lessons()
-	if Settings.static_get("plan","subgroup_id") != null:
-		subgroup_id = Settings.static_get("plan","subgroup_id")
-		subgroups_update.emit()
 
 
-func get_course_groups() -> void:
-	if course_id == null: return
-	state = "Getting courses..."
-	list_of_groups.clear()
-	var regex = RegEx.new()
-	var course_file := FileAccess.open(await download("https://plan.uz.zgora.pl/grupy_lista_grup_kierunku.php?ID="+str(course_id),"html","groups"),FileAccess.READ)
-	regex.compile(r'grupy_plan\.php\?ID=(\d+)">([^<]+)</a>')
-	for m in regex.search_all(course_file.get_as_text()):
-		list_of_groups[m.get_string(1)] = m.get_string(2).strip_edges()
+func _load_groups(id: String) -> void:
+	var fresh := _links(await _download("grupy_lista_grup_kierunku.php?ID=" + id), "grupy_plan")
+	if id != course_id or fresh.is_empty():
+		return
+	list_of_groups = fresh
+	_cache.put("groups", id, fresh)
 	groups_update.emit()
 
-func get_lessons() -> void:
-	if group_id == null:
+
+func _load_lessons(id: String) -> void:
+	var text := await _download("grupy_ics.php?ID=%s&KIND=GG" % id)
+	if id != group_id or text.is_empty():
 		return
-	state = "Getting lessons..."
-	data.clear()
-	var url = "https://plan.uz.zgora.pl/grupy_ics.php?ID={0}&KIND=GG".format([group_id])
-	var group_file := FileAccess.open(await download(url, "ics", "plan"), FileAccess.READ)
-	if not group_file:
-		push_error("Nie można otworzyć pliku planu")
-		return
-
-	var content = group_file.get_as_text()
-	group_file.close()
-
-	# Scal linie kontynuacji
-	var merged_lines: PackedStringArray = []
-	var prev_line := ""
-	for line in content.split("\n"):
-		if line.begins_with(" ") or line.begins_with("\t"):
-			prev_line += line.strip_edges()
-		else:
-			if prev_line != "":
-				merged_lines.append(prev_line)
-			prev_line = line.strip_edges()
-	if prev_line != "":
-		merged_lines.append(prev_line)
-
-	var current_event: Dictionary = {}
-	var in_event := false
-
-	for line in merged_lines:
-		if line == "BEGIN:VEVENT":
-			current_event = {}
-			in_event = true
-			continue
-		elif line == "END:VEVENT":
-			in_event = false
-
-			# Dodaj tylko eventy z datą
-			if current_event.has("DTSTART"):
-				var dtstart = current_event["DTSTART"]
-				var dtend = current_event.get("DTEND", "")
-
-				var date = dtstart.substr(0, 8)
-				var date_formatted = "%s-%s-%s" % [date.substr(0,4), date.substr(4,2), date.substr(6,2)]
-
-				var start_time = ""
-				var end_time = ""
-				if dtstart.length() >= 15:
-					start_time = "%s:%s" % [dtstart.substr(9,2), dtstart.substr(11,2)]
-				if dtend.length() >= 15:
-					end_time = "%s:%s" % [dtend.substr(9,2), dtend.substr(11,2)]
-
-				current_event["start"] = start_time
-				current_event["end"] = end_time
-				current_event["date"] = date_formatted
-
-				# Dodaj do listy
-				if not data.has(date_formatted):
-					data[date_formatted] = {}
-
-				var uid = current_event.get("UID", "UNKNOWN")
-				data[date_formatted][uid] = current_event.duplicate()
-			continue
-
-		if not in_event or line == "":
-			continue
-
-		# Parsowanie linii klucz:wartość
-		var parts = line.split(":", false, 2)
-		if parts.size() < 2:
-			continue
-
-		var key = parts[0].strip_edges()
-		var value = parts[1].strip_edges()
-
-		# Specjalne przetwarzanie SUMMARY
-		if key == "SUMMARY":
-			var summary: String = line.replace("SUMMARY:","")
-
-			# 1. Wyciągnij nauczyciela po dwukropku (: ...)
-			if summary.find(":") != -1:
-				var parts2 = summary.split(":", false, 2)
-				if parts2.size() >= 2:
-					current_event["teacher"] = parts2[1].strip_edges().split("(")[0]
-				else:
-					current_event["teacher"] = "Brak danych"
-			else:
-				current_event["teacher"] = "Brak danych"
-
-			# 2. Wyciągnij podgrupę (PG: X)
-			if summary.find("(PG:") != -1:
-				var part = summary.split("(PG: ")[1]
-				current_event["subgroup"] = part.split(")")[0]
-				summary = summary.replace("(PG: " + current_event["subgroup"] + ")", "")
-			else:
-				current_event["subgroup"] = "O"
-
-			# 3. Zapisz końcową nazwę zajęć
-			current_event["SUMMARY"] = summary.strip_edges()
-
-		else:
-			current_event[key] = value
-	list_of_lessons.clear()
-	for e in data.keys():
-		var o: Day = Day.new(e,data[e])
-		list_of_lessons.append(o)
-	Cache.static_course_save(course_id,group_id,list_of_lessons)
-	state = "Acquired lessons.."
+	lessons = IcsParser.new().parse(text)
+	_cache.put_lessons(id, lessons)
+	_prune_subgroups()
 	lessons_update.emit()
+	say("Plan updated")
+
+
+func _prune_subgroups() -> void:
+	var available := available_subgroups()
+	var kept := PackedStringArray()
+	for label in subgroups:
+		if label in available:
+			kept.append(label)
+	if kept.size() != subgroups.size():
+		subgroups = kept
+		_save_selection()
+
+
+func _links(html: String, page: String) -> Dictionary:
+	var result := {}
+	var regex := RegEx.create_from_string(page + r'\.php\?ID=(\d+)"[^>]*>([^<]+)</a>')
+	for found in regex.search_all(html):
+		result[found.get_string(1)] = found.get_string(2).strip_edges().xml_unescape()
+	return result
+
+
+func _download(path: String) -> String:
+	_set_busy(1)
+	var http := HTTPRequest.new()
+	http.use_threads = true
+	http.timeout = 15.0
+	http.set_tls_options(TLSOptions.client_unsafe())
+	add_child(http)
+	var text := ""
+	if http.request(BASE_URL + path) == OK:
+		var response: Array = await http.request_completed
+		if response[0] == HTTPRequest.RESULT_SUCCESS and response[1] == 200:
+			text = (response[3] as PackedByteArray).get_string_from_utf8()
+	http.queue_free()
+	_set_busy(-1)
+	return text
+
+
+func _set_busy(delta: int) -> void:
+	_pending += delta
+	if _pending == 1 and delta > 0:
+		busy_changed.emit(true)
+	elif _pending == 0:
+		busy_changed.emit(false)
+
+
+func _restore() -> void:
+	course_id = str(_settings.take("plan", "course_id", ""))
+	group_id = str(_settings.take("plan", "group_id", ""))
+	if course_id == "0":
+		course_id = ""
+	if group_id == "0":
+		group_id = ""
+	subgroups = PackedStringArray(_settings.take("plan", "subgroups", []))
+	list_of_courses = _cache.take("courses", "all", {})
+	list_of_groups = _cache.take("groups", course_id, {})
+	lessons = _cache.take_lessons(group_id)
+	courses_update.emit()
+	groups_update.emit()
+	lessons_update.emit()
+
+
+func _save_selection() -> void:
+	_settings.set_value("plan", "course_id", course_id)
+	_settings.set_value("plan", "group_id", group_id)
+	_settings.set_value("plan", "subgroups", Array(subgroups))
+	_settings.save(Settings.PATH)

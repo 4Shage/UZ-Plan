@@ -1,0 +1,64 @@
+[gd_scene format=3 uid="uid://id34ssqkpmf0"]
+
+[ext_resource type="Script" uid="uid://dtu1s4htcuqqg" path="res://scenes/selector.gd" id="1_y6aoi"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_bg"]
+bg_color = Color(0.05, 0.05, 0.05, 1)
+
+[node name="Selector" type="PanelContainer"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_bg")
+script = ExtResource("1_y6aoi")
+
+[node name="Margin" type="MarginContainer" parent="."]
+layout_mode = 2
+theme_override_constants/margin_left = 6
+theme_override_constants/margin_top = 6
+theme_override_constants/margin_right = 6
+theme_override_constants/margin_bottom = 6
+
+[node name="Column" type="VBoxContainer" parent="Margin"]
+layout_mode = 2
+
+[node name="TopBar" type="HBoxContainer" parent="Margin/Column"]
+layout_mode = 2
+
+[node name="Title" type="Label" parent="Margin/Column/TopBar"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"Header"
+vertical_alignment = 1
+
+[node name="CloseButton" type="Button" parent="Margin/Column/TopBar"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Close"
+
+[node name="Search" type="LineEdit" parent="Margin/Column"]
+unique_name_in_owner = true
+layout_mode = 2
+placeholder_text = "Search..."
+clear_button_enabled = true
+
+[node name="Scroll" type="ScrollContainer" parent="Margin/Column"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="Rows" type="VBoxContainer" parent="Margin/Column/Scroll"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Empty" type="Label" parent="Margin/Column"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+text = "Nothing found"
+horizontal_alignment = 1
