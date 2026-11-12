@@ -4,7 +4,6 @@ extends PanelContainer
 signal chosen(id: String)
 
 const FOLD := {"ą": "a", "ć": "c", "ę": "e", "ł": "l", "ń": "n", "ó": "o", "ś": "s", "ź": "z", "ż": "z"}
-const CURRENT_COLOR := Color(0.2, 0.4, 0.8)
 
 @onready var title_label: Label = %Title
 @onready var search: LineEdit = %Search
@@ -67,11 +66,7 @@ func _build(current: String) -> void:
 		button.alignment = HORIZONTAL_ALIGNMENT_LEFT
 		button.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		button.custom_minimum_size.y = 44
-		if id == current:
-			var style := StyleBoxFlat.new()
-			style.bg_color = CURRENT_COLOR
-			style.set_corner_radius_all(4)
-			button.add_theme_stylebox_override("normal", style)
+		button.theme_type_variation = &"RowCurrent" if id == current else &"Row"
 		button.pressed.connect(_finish.bind(id))
 		rows.add_child(button)
 		_buttons[id] = button

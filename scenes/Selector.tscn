@@ -1,6 +1,7 @@
 [gd_scene format=3 uid="uid://id34ssqkpmf0"]
 
 [ext_resource type="Script" uid="uid://dtu1s4htcuqqg" path="res://scenes/selector.gd" id="1_y6aoi"]
+[ext_resource type="Theme" path="res://custom_resources/app_theme.tres" id="2_app"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_bg"]
 bg_color = Color(0.05, 0.05, 0.05, 1)
@@ -11,6 +12,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+theme = ExtResource("2_app")
 theme_override_styles/panel = SubResource("StyleBoxFlat_bg")
 script = ExtResource("1_y6aoi")
 

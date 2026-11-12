@@ -93,11 +93,11 @@ func _apply_safe_area() -> void:
 		return
 	var safe := DisplayServer.get_display_safe_area()
 	var window := DisplayServer.window_get_size()
-	var scale := get_tree().root.content_scale_factor
-	margin.add_theme_constant_override("margin_left", 4 + int(safe.position.x / scale))
-	margin.add_theme_constant_override("margin_top", 4 + int(safe.position.y / scale))
-	margin.add_theme_constant_override("margin_right", 4 + int((window.x - safe.end.x) / scale))
-	margin.add_theme_constant_override("margin_bottom", 4 + int((window.y - safe.end.y) / scale))
+	var ui_scale := get_tree().root.content_scale_factor
+	margin.add_theme_constant_override("margin_left", 4 + int(safe.position.x / ui_scale))
+	margin.add_theme_constant_override("margin_top", 4 + int(safe.position.y / ui_scale))
+	margin.add_theme_constant_override("margin_right", 4 + int((window.x - safe.end.x) / ui_scale))
+	margin.add_theme_constant_override("margin_bottom", 4 + int((window.y - safe.end.y) / ui_scale))
 
 
 func _update_buttons() -> void:

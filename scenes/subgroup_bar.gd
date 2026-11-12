@@ -25,6 +25,7 @@ func _chip(text: String, pressed: bool, action: Callable) -> Button:
 	chip.text = text
 	chip.toggle_mode = true
 	chip.button_pressed = pressed
+	chip.theme_type_variation = &"Chip"
 	chip.custom_minimum_size = Vector2(56, 44)
 	chip.pressed.connect(action)
 	return chip

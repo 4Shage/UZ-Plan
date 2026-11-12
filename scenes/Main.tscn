@@ -8,6 +8,7 @@
 [ext_resource type="Texture2D" uid="uid://f8pxk346jq3y" path="res://assets/arrow_back.svg" id="6_back"]
 [ext_resource type="Texture2D" uid="uid://76qxo626kf1o" path="res://assets/arrow_forward.svg" id="7_next"]
 [ext_resource type="Texture2D" path="res://assets/refresh.svg" id="8_refresh"]
+[ext_resource type="Theme" path="res://custom_resources/app_theme.tres" id="9_app"]
 
 [node name="Main" type="Control"]
 layout_mode = 3
@@ -29,6 +30,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+theme = ExtResource("9_app")
 theme_override_constants/margin_left = 4
 theme_override_constants/margin_top = 4
 theme_override_constants/margin_right = 4
@@ -41,6 +43,7 @@ layout_mode = 2
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_vertical = 3
+tab_alignment = 1
 tabs_position = 1
 
 [node name="Plan" type="VBoxContainer" parent="Margin/Column/Tabs"]
@@ -59,10 +62,12 @@ icon = ExtResource("6_back")
 [node name="DateLabel" type="Label" parent="Margin/Column/Tabs/Plan/DayNav"]
 unique_name_in_owner = true
 layout_mode = 2
+custom_minimum_size = Vector2(10, 0)
 size_flags_horizontal = 3
 horizontal_alignment = 1
 vertical_alignment = 1
 autowrap_mode = 3
+theme_type_variation = &"Title"
 
 [node name="TodayButton" type="Button" parent="Margin/Column/Tabs/Plan/DayNav"]
 unique_name_in_owner = true
@@ -88,10 +93,11 @@ horizontal_scroll_mode = 0
 [node name="OptionsColumn" type="VBoxContainer" parent="Margin/Column/Tabs/Options"]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_constants/separation = 8
+theme_override_constants/separation = 10
 
 [node name="CourseLabel" type="Label" parent="Margin/Column/Tabs/Options/OptionsColumn"]
 layout_mode = 2
+theme_type_variation = &"Muted"
 text = "Course"
 
 [node name="CourseButton" type="Button" parent="Margin/Column/Tabs/Options/OptionsColumn"]
@@ -105,6 +111,7 @@ text_overrun_behavior = 3
 
 [node name="GroupLabel" type="Label" parent="Margin/Column/Tabs/Options/OptionsColumn"]
 layout_mode = 2
+theme_type_variation = &"Muted"
 text = "Group"
 
 [node name="GroupButton" type="Button" parent="Margin/Column/Tabs/Options/OptionsColumn"]
@@ -121,6 +128,7 @@ layout_mode = 2
 
 [node name="SubgroupLabel" type="Label" parent="Margin/Column/Tabs/Options/OptionsColumn/SubgroupSection"]
 layout_mode = 2
+theme_type_variation = &"Muted"
 text = "Subgroup"
 
 [node name="SubgroupBar" type="HFlowContainer" parent="Margin/Column/Tabs/Options/OptionsColumn/SubgroupSection"]
@@ -140,6 +148,8 @@ icon = ExtResource("8_refresh")
 [node name="Status" type="Label" parent="Margin/Column"]
 unique_name_in_owner = true
 layout_mode = 2
+custom_minimum_size = Vector2(10, 0)
+theme_type_variation = &"Muted"
 horizontal_alignment = 1
 autowrap_mode = 3
 
