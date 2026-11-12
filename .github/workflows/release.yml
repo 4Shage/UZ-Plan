@@ -1,0 +1,186 @@
+name: Release
+
+on:
+  push:
+    branches: [main]
+    paths: [project.godot]
+  workflow_dispatch:
+    inputs:
+      upload_to_play:
+        description: Upload the AAB to Google Play
+        type: boolean
+        default: true
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+env:
+  GODOT_VERSION: "4.7"
+  GODOT_RELEASE: stable
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.read.outputs.version }}
+      code: ${{ steps.read.outputs.code }}
+      build: ${{ steps.read.outputs.build }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - id: read
+        env:
+          EVENT: ${{ github.event_name }}
+        run: |
+          version=$(sed -nE 's/^config\/version="([^"]+)".*/\1/p' project.godot)
+          if ! [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::config/version must look like 1.2.3, got '$version'"
+            exit 1
+          fi
+          IFS=. read -r major minor patch <<< "$version"
+          build=true
+          if [ "$EVENT" = push ] && [ -n "$(git tag -l "v$version")" ]; then
+            build=false
+          fi
+          {
+            echo "version=$version"
+            echo "code=$((major * 10000 + minor * 100 + patch))"
+            echo "build=$build"
+          } >> "$GITHUB_OUTPUT"
+
+  release:
+    needs: check
+    if: needs.check.outputs.build == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    permissions:
+      contents: write
+    env:
+      VERSION: ${{ needs.check.outputs.version }}
+      VERSION_CODE: ${{ needs.check.outputs.code }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: gradle-${{ runner.os }}-godot-${{ env.GODOT_VERSION }}
+          restore-keys: gradle-${{ runner.os }}-
+
+      - name: Install Godot and export templates
+        run: |
+          base="https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}-${GODOT_RELEASE}"
+          name="Godot_v${GODOT_VERSION}-${GODOT_RELEASE}"
+          curl -fsSL -o "$RUNNER_TEMP/godot.zip" "$base/${name}_linux.x86_64.zip"
+          curl -fsSL -o "$RUNNER_TEMP/templates.tpz" "$base/${name}_export_templates.tpz"
+          unzip -q "$RUNNER_TEMP/godot.zip" -d "$RUNNER_TEMP/godot"
+          unzip -q "$RUNNER_TEMP/templates.tpz" -d "$RUNNER_TEMP/tpl"
+          full=$(cat "$RUNNER_TEMP/tpl/templates/version.txt")
+          templates_dir="$HOME/.local/share/godot/export_templates/$full"
+          mkdir -p "$templates_dir"
+          mv "$RUNNER_TEMP"/tpl/templates/* "$templates_dir/"
+          rm -f "$RUNNER_TEMP/godot.zip" "$RUNNER_TEMP/templates.tpz"
+          {
+            echo "GODOT=$RUNNER_TEMP/godot/${name}_linux.x86_64"
+            echo "GODOT_FULL=$full"
+            echo "TEMPLATES_DIR=$templates_dir"
+          } >> "$GITHUB_ENV"
+
+      - name: Install Android build template and SDK packages
+        run: |
+          mkdir -p android/build
+          unzip -q "$TEMPLATES_DIR/android_source.zip" -d android/build
+          echo "$GODOT_FULL" > android/.build_version
+          touch android/build/.gdignore
+          cfg=android/build/config.gradle
+          compile=$(sed -nE "s/.*compileSdk[[:space:]]*:[[:space:]]*([0-9]+).*/\1/p" "$cfg")
+          tools=$(sed -nE "s/.*buildTools[[:space:]]*:[[:space:]]*'([^']+)'.*/\1/p" "$cfg")
+          ndk=$(sed -nE "s/.*ndkVersion[[:space:]]*:[[:space:]]*'([^']+)'.*/\1/p" "$cfg")
+          sdkmanager="$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
+          yes | "$sdkmanager" --licenses > /dev/null || true
+          "$sdkmanager" "platform-tools" "platforms;android-$compile" "build-tools;$tools" "ndk;$ndk"
+          echo "BUILD_TOOLS=$tools" >> "$GITHUB_ENV"
+          mkdir -p "$HOME/.config/godot"
+          cat > "$HOME/.config/godot/editor_settings-${GODOT_VERSION}.tres" <<EOF
+          [gd_resource type="EditorSettings" format=3]
+
+          [resource]
+          export/android/java_sdk_path = "$JAVA_HOME"
+          export/android/android_sdk_path = "$ANDROID_HOME"
+          EOF
+
+      - name: Set version
+        run: |
+          sed -i -E "s|^version/code=.*|version/code=${VERSION_CODE}|; s|^version/name=.*|version/name=\"${VERSION}\"|" export_presets.cfg
+
+      - name: Configure signing
+        env:
+          KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+        run: |
+          if [ -z "$KEYSTORE_BASE64" ] || [ -z "$KEY_ALIAS" ] || [ -z "$KEY_PASSWORD" ]; then
+            echo "::error::Missing ANDROID_KEYSTORE_BASE64, ANDROID_KEY_ALIAS or ANDROID_KEYSTORE_PASSWORD secret"
+            exit 1
+          fi
+          echo "$KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/release.jks"
+          {
+            echo "GODOT_ANDROID_KEYSTORE_RELEASE_PATH=$RUNNER_TEMP/release.jks"
+            echo "GODOT_ANDROID_KEYSTORE_RELEASE_USER=$KEY_ALIAS"
+            echo "GODOT_ANDROID_KEYSTORE_RELEASE_PASSWORD=$KEY_PASSWORD"
+          } >> "$GITHUB_ENV"
+
+      - name: Export
+        run: |
+          "$GODOT" --headless --path . --import || true
+          mkdir -p build
+          "$GODOT" --headless --path . --export-release "Android AAB" build/uz-plan.aab
+          "$GODOT" --headless --path . --export-release "Android APK" "build/UZ-Plan-${VERSION}.apk"
+          test -s build/uz-plan.aab
+          test -s "build/UZ-Plan-${VERSION}.apk"
+          "$ANDROID_HOME/build-tools/$BUILD_TOOLS/apksigner" verify --print-certs "build/UZ-Plan-${VERSION}.apk" | grep "SHA-256"
+
+      - name: Publish GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ env.VERSION }}
+          target_commitish: ${{ github.sha }}
+          name: UZ Plan ${{ env.VERSION }}
+          generate_release_notes: true
+          files: |
+            build/UZ-Plan-${{ env.VERSION }}.apk
+            build/uz-plan.aab
+
+      - name: Check Google Play setup
+        id: play
+        env:
+          PLAY_JSON: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+          UPLOAD: ${{ github.event_name != 'workflow_dispatch' || inputs.upload_to_play }}
+        run: |
+          enabled=false
+          if [ -n "$PLAY_JSON" ] && [ "$UPLOAD" = true ]; then enabled=true; fi
+          package=$(sed -nE 's/^package\/unique_name="([^"]+)".*/\1/p' export_presets.cfg | head -1)
+          {
+            echo "enabled=$enabled"
+            echo "package=$package"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Upload to Google Play
+        if: steps.play.outputs.enabled == 'true'
+        uses: r0adkll/upload-google-play@v1
+        with:
+          serviceAccountJsonPlainText: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+          packageName: ${{ steps.play.outputs.package }}
+          releaseFiles: build/uz-plan.aab
+          releaseName: ${{ env.VERSION }}
+          track: ${{ vars.PLAY_TRACK || 'internal' }}
+          status: ${{ vars.PLAY_STATUS || 'completed' }}
