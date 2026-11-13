@@ -21,7 +21,6 @@ mono_crash.*.json
 Output/
 *.import
 *.jks
-*.pem
 *.keystore
 crawl.json
 /build/
