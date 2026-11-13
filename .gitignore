@@ -18,9 +18,11 @@ mono_crash.*.json
 # My ignores
 /android/
 *.tmp
-Output/
 *.import
 *.jks
 *.keystore
 crawl.json
 /build/
+
+/output/*
+!/output/.gdignore
