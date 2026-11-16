@@ -23,10 +23,12 @@ static func to_minutes(clock: String) -> int:
 
 static func format_minutes(total: int) -> String:
 	if total < 60:
-		return "%d min" % total
+		return TranslationServer.translate("%d min") % total
 	var hours := floori(total / 60.0)
 	var rest := total % 60
-	return "%d h" % hours if rest == 0 else "%d h %d min" % [hours, rest]
+	if rest == 0:
+		return TranslationServer.translate("%d h") % hours
+	return TranslationServer.translate("%d h %d min") % [hours, rest]
 
 
 func start_time() -> String:
@@ -64,11 +66,36 @@ func _end_minutes(lesson: Lesson) -> int:
 
 func weekday() -> String:
 	var parts := Time.get_datetime_dict_from_unix_time(int(Time.get_unix_time_from_datetime_string(date)))
-	return WEEKDAYS[parts["weekday"]]
+	return TranslationServer.translate(WEEKDAYS[parts["weekday"]])
 
 
 func pretty() -> String:
 	var parts := date.split("-")
 	if parts.size() != 3:
 		return date
-	return "%d %s %s" % [int(parts[2]), MONTHS[clampi(int(parts[1]) - 1, 0, 11)], parts[0]]
+	var month_name := TranslationServer.translate(MONTHS[clampi(int(parts[1]) - 1, 0, 11)])
+	return "%d %s %s" % [int(parts[2]), month_name, parts[0]]
+
+
+# Ta metoda nigdy nie jest wywoływana w grze.
+# Służy wyłącznie do tego, aby parser Godota wykrył stringi przy kliknięciu "Generate POT".
+static func _extract_translations() -> void:
+	TranslationServer.translate("Sunday")
+	TranslationServer.translate("Monday")
+	TranslationServer.translate("Tuesday")
+	TranslationServer.translate("Wednesday")
+	TranslationServer.translate("Thursday")
+	TranslationServer.translate("Friday")
+	TranslationServer.translate("Saturday")
+	TranslationServer.translate("Jan")
+	TranslationServer.translate("Feb")
+	TranslationServer.translate("Mar")
+	TranslationServer.translate("Apr")
+	TranslationServer.translate("May")
+	TranslationServer.translate("Jun")
+	TranslationServer.translate("Jul")
+	TranslationServer.translate("Aug")
+	TranslationServer.translate("Sep")
+	TranslationServer.translate("Oct")
+	TranslationServer.translate("Nov")
+	TranslationServer.translate("Dec")

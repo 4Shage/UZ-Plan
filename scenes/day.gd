@@ -46,9 +46,9 @@ func _summary(day: Day) -> PanelContainer:
 	var row := HBoxContainer.new()
 	panel.add_child(row)
 	var breaks := Day.format_minutes(day.total_break()) if day.total_break() > 0 else "-"
-	row.add_child(_stat("Start", day.start_time()))
-	row.add_child(_stat("End", day.end_time()))
-	row.add_child(_stat("Breaks", breaks))
+	row.add_child(_stat(tr("Start"), day.start_time()))
+	row.add_child(_stat(tr("End"), day.end_time()))
+	row.add_child(_stat(tr("Breaks"), breaks))
 	return panel
 
 
@@ -64,7 +64,8 @@ func _break_row(minutes: int) -> PanelContainer:
 	var long := minutes >= LONG_BREAK_MINUTES
 	var panel := PanelContainer.new()
 	panel.theme_type_variation = &"LongBreakPanel" if long else &"BreakPanel"
-	var text := "%s  -  %s" % ["Long break" if long else "Break", Day.format_minutes(minutes)]
+	var break_label := tr("Long break") if long else tr("Break")
+	var text := "%s  -  %s" % [break_label, Day.format_minutes(minutes)]
 	panel.add_child(_label(text, &"LongBreakText" if long else &"BreakText"))
 	return panel
 
